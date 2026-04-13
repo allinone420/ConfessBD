@@ -464,6 +464,25 @@ export default function App() {
     }
   };
 
+  const handleRefreshLocation = async () => {
+    setIsLoading(true);
+    setUserLocation(null);
+    setFilterArea('Nearby');
+    try {
+      const loc = await detectLocation();
+      if (loc && loc.city && loc.city !== 'Unknown') {
+        setUserLocation(loc);
+        setFilterArea('Nearby');
+      } else {
+        setFilterArea('All');
+      }
+    } catch (err) {
+      setFilterArea('All');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <ErrorBoundary>
       <div className="min-h-screen max-w-2xl mx-auto flex flex-col relative">
@@ -499,10 +518,13 @@ export default function App() {
                 Nearby ({userLocation.city})
               </button>
             ) : filterArea === 'Nearby' ? (
-              <div className="whitespace-nowrap px-4 py-2 rounded-full text-xs font-bold border border-white/5 text-gray-600 flex items-center animate-pulse">
+              <button
+                onClick={handleRefreshLocation}
+                className="whitespace-nowrap px-4 py-2 rounded-full text-xs font-bold border border-white/5 text-gray-600 flex items-center animate-pulse hover:text-gray-400 transition-colors"
+              >
                 <MapPin size={12} className="mr-1" />
-                Detecting...
-              </div>
+                Detecting... (Tap to retry)
+              </button>
             ) : null}
             <button
               onClick={() => setFilterArea('All')}
