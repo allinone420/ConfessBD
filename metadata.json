@@ -1,0 +1,5 @@
+{
+  "name": "ConfessBD",
+  "description": "A modern, anonymous confession platform for local areas. Post, react, and comment anonymously.",
+  "requestFramePermissions": ["geolocation"]
+}

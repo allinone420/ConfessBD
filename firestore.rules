@@ -1,0 +1,77 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: confessions
+    // Document ID: auto-generated
+    // Fields:
+    //   - text: string (required, 1-300 chars)
+    //   - area: string (required)
+    //   - likes: number (optional, default 0)
+    //   - commentsCount: number (optional, default 0)
+    //   - timestamp: timestamp (required)
+    //   - secretId: string (required)
+    //   - reports: number (optional, default 0)
+    //
+    // Collection: confessions/{confessionId}/comments
+    // Document ID: auto-generated
+    // Fields:
+    //   - confessionId: string (required)
+    //   - text: string (required, 1-200 chars)
+    //   - timestamp: timestamp (required)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isValidConfession(data) {
+      return data.text is string && data.text.size() > 0 && data.text.size() <= 300 &&
+             data.area is string && data.area.size() > 0 && data.area.size() <= 50 &&
+             data.secretId is string && data.secretId.size() > 0 &&
+             data.timestamp is timestamp;
+    }
+
+    function isValidComment(data) {
+      return data.text is string && data.text.size() > 0 && data.text.size() <= 200 &&
+             data.confessionId is string &&
+             data.timestamp is timestamp;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /confessions/{confessionId} {
+      // Anyone can read confessions (anonymous platform)
+      allow read: if true;
+      
+      // Anyone can create a confession (anonymous)
+      allow create: if isValidConfession(request.resource.data);
+      
+      // Allow updates for likes, commentsCount, and reports
+      // In a real app, we'd use the atomic increment pattern with tracking docs
+      // For this MVP, we'll allow simple increments but restrict other fields
+      allow update: if 
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'commentsCount', 'reports']) &&
+        (
+          (!('likes' in request.resource.data) || request.resource.data.likes >= resource.data.likes) &&
+          (!('commentsCount' in request.resource.data) || request.resource.data.commentsCount >= resource.data.commentsCount) &&
+          (!('reports' in request.resource.data) || request.resource.data.reports >= resource.data.reports)
+        );
+
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if isValidComment(request.resource.data);
+      }
+    }
+  }
+}
