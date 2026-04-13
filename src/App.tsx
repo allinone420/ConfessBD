@@ -173,7 +173,7 @@ const CreateModal = ({
         timestamp: serverTimestamp()
       });
       setText('');
-      setArea('');
+      setArea(defaultArea || '');
       onSuccess();
       onClose();
     } catch (error) {
@@ -226,20 +226,36 @@ const CreateModal = ({
               </div>
 
               <div className="mb-8">
-                <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">
-                  Area
+                <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2 flex justify-between">
+                  <span>Area</span>
+                  {defaultArea && area !== defaultArea && (
+                    <button 
+                      type="button"
+                      onClick={() => setArea(defaultArea)}
+                      className="text-neon-accent hover:underline lowercase"
+                    >
+                      Use {defaultArea}
+                    </button>
+                  )}
                 </label>
-                <select
-                  required
-                  value={area}
-                  onChange={(e) => setArea(e.target.value)}
-                  className="w-full bg-dark-bg/50 border neon-border rounded-xl p-4 text-gray-200 appearance-none"
-                >
-                  <option value="" disabled>Select your area</option>
-                  {AREAS.map(a => (
-                    <option key={a} value={a}>{a}</option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <input
+                    required
+                    type="text"
+                    list="area-suggestions"
+                    value={area}
+                    onChange={(e) => setArea(e.target.value)}
+                    placeholder="e.g. Dhaka, Kaliganj..."
+                    className="w-full bg-dark-bg/50 border neon-border rounded-xl p-4 text-gray-200"
+                  />
+                  <datalist id="area-suggestions">
+                    {defaultArea && <option value={defaultArea} />}
+                    {AREAS.map(a => (
+                      <option key={a} value={a} />
+                    ))}
+                  </datalist>
+                  <MapPin size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
+                </div>
               </div>
 
               <button
